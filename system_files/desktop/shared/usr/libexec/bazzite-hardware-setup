@@ -7,7 +7,7 @@ IMAGE_FLAVOR=$(jq -r '."image-flavor"' < $IMAGE_INFO)
 FEDORA_VERSION=$(jq -r '."fedora-version"' < $IMAGE_INFO)
 
 # SCRIPT VERSION
-HWS_VER=44
+HWS_VER=45
 HWS_VER_FILE="/etc/bazzite/hws_version"
 HWS_VER_RAN=$(cat $HWS_VER_FILE)
 
@@ -162,6 +162,8 @@ if [[ $IMAGE_NAME =~ "deck" || $IMAGE_NAME =~ "ally" || $IMAGE_NAME =~ "framegam
 
     systemctl enable --now jupiter-fan-control.service
     systemctl enable --now vpower.service
+    # Only enabled on Valve Hardware because HHD handles this elsewhere
+    systemctl enable --now scx-lavd.service
   else
     echo "Generic device detected. Performing setup..."
     systemctl disable --now jupiter-fan-control.service
@@ -224,6 +226,9 @@ fi
 # ALLY POWER SAVE FIX
 if [[ ":ROG Ally RC71L:" =~ ":$SYS_ID:"  ]]; then
   echo 0 | sudo tee /sys/devices/platform/asus-nb-wmi/mcu_powersave
+elif [[ ":ROG Ally X RC72LA:" =~ ":$SYS_ID:" ]]; then
+  modprobe -r amd_pmf
+  echo "blacklist amd_pmf" | sudo tee /etc/modprobe.d/hhd-blacklist.conf
 fi
 
 # WAYDROID FIX
