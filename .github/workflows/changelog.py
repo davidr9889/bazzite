@@ -44,8 +44,6 @@ CHANGELOG_FORMAT = """\
 
 From previous `{target}` version `{prev}` there have been the following changes. **One package per new version shown.**
 
-Visit [bazzite.gg](https://bazzite.gg) for more information and to download Bazzite.
-
 ### Major packages
 | Name | Version |
 | --- | --- |
@@ -58,6 +56,15 @@ Visit [bazzite.gg](https://bazzite.gg) for more information and to download Bazz
 | **[HHD](https://github.com/hhd-dev/hhd)** | {pkgrel:hhd} |
 
 {changes}
+
+### How to rebase
+For current users, type the following to rebase to this version:
+```bash
+# For this branch (if latest):
+bazzite-rollback-helper rebase {target}
+# For this specific image:
+bazzite-rollback-helper rebase {curr}
+```
 """
 HANDWRITTEN_PLACEHOLDER = """\
 This is an automatically generated changelog for release `{curr}`."""
@@ -287,6 +294,10 @@ def get_commits(prev_manifests, manifests, workdir: str):
             if not commit:
                 continue
             hash, short, subject = commit.split(" ", 2)
+
+            if subject.lower().startswith("merge"):
+                continue
+
             out += (
                 COMMIT_FORMAT.replace("{short}", short)
                 .replace("{subject}", subject)
@@ -386,6 +397,9 @@ def main():
     # Remove refs/tags, refs/heads, refs/remotes e.g.
     # Tags cannot include / anyway.
     target = args.target.split('/')[-1]
+
+    if target == "main":
+        target = "stable"
 
     manifests = get_manifests(target)
     prev, curr = get_tags(target, manifests)
